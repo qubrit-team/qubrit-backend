@@ -12,6 +12,7 @@ import qubrit_backend.auth.dto.LoginRequest;
 import qubrit_backend.auth.dto.SignupRequest;
 import qubrit_backend.auth.dto.TokenResponse;
 import qubrit_backend.auth.jwt.JwtProvider;
+import qubrit_backend.auth.verification.EmailVerificationService;
 
 import java.util.List;
 
@@ -21,8 +22,11 @@ public class AuthService {
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtProvider jwtProvider;
+	private final EmailVerificationService verificationService;
 
-	public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtProvider jwtProvider) {
+	public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtProvider jwtProvider,
+			EmailVerificationService verificationService) {
+		this.verificationService = verificationService;
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.jwtProvider = jwtProvider;
@@ -33,8 +37,20 @@ public class AuthService {
 		if (userRepository.existsByEmail(req.email())) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.");
 		}
+		verificationService.consumeVerified(req.email());
 		List<String> subjects = req.subjects() == null ? List.of() : req.subjects();
 		userRepository.save(new User(req.email(), passwordEncoder.encode(req.password()), req.nickname(), subjects));
+	}
+
+	public void sendCode(String email) {
+		if (userRepository.existsByEmail(email)) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.");
+		}
+		verificationService.sendCode(email);
+	}
+
+	public void verifyCode(String email, String code) {
+		verificationService.verify(email, code);
 	}
 
 	@Transactional(readOnly = true)

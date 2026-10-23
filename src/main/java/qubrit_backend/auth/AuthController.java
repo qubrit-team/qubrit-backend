@@ -7,7 +7,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import qubrit_backend.auth.dto.CodeVerifyRequest;
 import qubrit_backend.auth.dto.EmailCheckResponse;
+import qubrit_backend.auth.dto.EmailRequest;
 import qubrit_backend.auth.dto.LoginRequest;
 import qubrit_backend.auth.dto.SignupRequest;
 import qubrit_backend.auth.dto.TokenResponse;
@@ -38,6 +40,23 @@ public class AuthController {
 	@GetMapping("/check-email")
 	public EmailCheckResponse checkEmail(@RequestParam String email) {
 		return authService.checkEmail(email);
+	}
+
+	@Operation(summary = "인증코드 발송", description = "이메일로 6자리 인증코드를 보냅니다. 5분간 유효하며 재발송은 60초 후 가능합니다.")
+	@ApiResponse(responseCode = "200", description = "발송 성공")
+	@ApiResponse(responseCode = "409", description = "이미 사용 중인 이메일")
+	@ApiResponse(responseCode = "429", description = "너무 빠른 재요청")
+	@PostMapping("/send-code")
+	public void sendCode(@Valid @RequestBody EmailRequest req) {
+		authService.sendCode(req.email());
+	}
+
+	@Operation(summary = "인증코드 확인", description = "일치하면 해당 이메일로 가입할 수 있게 됩니다.")
+	@ApiResponse(responseCode = "200", description = "인증 성공")
+	@ApiResponse(responseCode = "400", description = "코드 불일치/만료")
+	@PostMapping("/verify-code")
+	public void verifyCode(@Valid @RequestBody CodeVerifyRequest req) {
+		authService.verifyCode(req.email(), req.code());
 	}
 
 	@Operation(summary = "로그인", description = "성공하면 accessToken을 반환합니다.")

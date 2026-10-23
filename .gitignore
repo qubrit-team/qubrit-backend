@@ -50,3 +50,4 @@ uploads/
 ### 로그 / OS ###
 *.log
 .DS_Store
+!.env.example

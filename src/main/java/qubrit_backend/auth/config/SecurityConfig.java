@@ -29,7 +29,7 @@ public class SecurityConfig {
 				.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/check-email", "/api/subjects", "/error").permitAll()
+						.requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/check-email", "/api/auth/send-code", "/api/auth/verify-code", "/api/subjects", "/error").permitAll()
 						.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 						.anyRequest().authenticated())
 				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

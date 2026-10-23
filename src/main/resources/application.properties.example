@@ -24,3 +24,18 @@ gemini.base-url=https://generativelanguage.googleapis.com
 storage.dir=uploads
 spring.servlet.multipart.max-file-size=20MB
 spring.servlet.multipart.max-request-size=20MB
+
+# 프로젝트 루트의 .env(KEY=VALUE, 커밋 금지)를 읽어 환경변수처럼 사용
+spring.config.import=optional:file:.env[.properties]
+
+# 이메일 인증코드 발송 SMTP (MAILER_* 는 .env 또는 환경변수로 주입)
+spring.mail.host=${MAILER_HOST:}
+spring.mail.port=${MAILER_PORT:465}
+spring.mail.username=${MAILER_USER:}
+spring.mail.password=${MAILER_PASS:}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.ssl.enable=true
+spring.mail.properties.mail.smtp.connectiontimeout=5000
+spring.mail.properties.mail.smtp.timeout=5000
+spring.mail.properties.mail.smtp.writetimeout=5000
+mailer.from=${MAILER_FROM:${MAILER_USER:}}
