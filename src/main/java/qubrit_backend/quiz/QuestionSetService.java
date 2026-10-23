@@ -36,12 +36,14 @@ public class QuestionSetService {
 	private final AttemptAnswerRepository answerRepository;
 	private final WrongNoteRepository wrongNoteRepository;
 	private final QualityService quality;
+	private final SetMetricsService metrics;
 
 	public QuestionSetService(QuestionSetRepository setRepository, QuestionRepository questionRepository,
 			SubjectRepository subjectRepository, UserRepository userRepository, AttemptRepository attemptRepository,
 			AttemptAnswerRepository answerRepository, WrongNoteRepository wrongNoteRepository,
-			QualityService quality) {
+			QualityService quality, SetMetricsService metrics) {
 		this.quality = quality;
+		this.metrics = metrics;
 		this.attemptRepository = attemptRepository;
 		this.answerRepository = answerRepository;
 		this.wrongNoteRepository = wrongNoteRepository;
@@ -72,6 +74,7 @@ public class QuestionSetService {
 			}
 		}
 		setRepository.save(set);
+		metrics.refresh(set);
 		return detail(set, userId);
 	}
 
@@ -93,6 +96,7 @@ public class QuestionSetService {
 			throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "AI가 쓸 수 있는 문제를 만들지 못했습니다. 다시 시도해 주세요.");
 		}
 		setRepository.save(set);
+		metrics.refresh(set);
 		return detail(set, userId);
 	}
 
@@ -166,6 +170,7 @@ public class QuestionSetService {
 		QuestionSet set = requireOwned(userId, id);
 		requireMinQuestions(set.getQuestions().size());
 		set.publish();
+		metrics.refresh(set);
 		return detail(set, userId);
 	}
 
@@ -175,6 +180,7 @@ public class QuestionSetService {
 		Question q = buildQuestion(set, req);
 		set.addQuestion(q);
 		questionRepository.save(q);
+		metrics.refresh(set);
 		return toDto(q, true, QualityService.Stats.empty());
 	}
 
@@ -189,6 +195,7 @@ public class QuestionSetService {
 		q.clearChoices();
 		questionRepository.flush(); // orphan 삭제를 먼저 반영
 		addChoices(q, req);
+		metrics.refresh(q.getQuestionSet());
 		return toDto(q, true, QualityService.Stats.empty());
 	}
 
@@ -201,6 +208,7 @@ public class QuestionSetService {
 		// 위 삭제 쿼리가 영속성 컨텍스트를 비우므로 다시 읽어서 번호를 재정렬한다
 		Question fresh = questionRepository.findById(questionId).orElseThrow();
 		fresh.getQuestionSet().removeQuestion(fresh);
+		metrics.refresh(fresh.getQuestionSet());
 	}
 
 	/** 열람 가능한 세트만 반환: 소유자이거나, 발행됨 + PRIVATE 아님. */
@@ -232,14 +240,25 @@ public class QuestionSetService {
 		// 출제자는 전부, 풀이자는 품질 검증을 통과한(FAIL이 아닌) 문제만 본다
 		var shown = mine ? set.getQuestions() : set.visibleQuestions();
 		return new SetDetail(summary(set, userId, nickname),
-				shown.stream().map(q -> toDto(q, mine, stats.getOrDefault(q.getId(), QualityService.Stats.empty()))).toList());
+				shown.stream().map(q -> toDto(q, mine, stats.getOrDefault(q.getId(), QualityService.Stats.empty()))).toList(),
+				stats(set.getId(), stats));
+	}
+
+	// 풀이 수 / 평균 정답률(맞힌 문제 ÷ 출제된 문제) / 신뢰도(👍 ÷ 전체 평가). 근거가 없으면 null
+	private SetStats stats(Long setId, Map<Long, QualityService.Stats> questionStats) {
+		var totals = attemptRepository.totalsForSet(setId);
+		Integer accuracy = totals.getTotal() == 0 ? null : (int) Math.round(totals.getScore() * 100.0 / totals.getTotal());
+		int up = questionStats.values().stream().mapToInt(QualityService.Stats::up).sum();
+		int down = questionStats.values().stream().mapToInt(QualityService.Stats::down).sum();
+		Integer trust = up + down == 0 ? null : (int) Math.round(up * 100.0 / (up + down));
+		return new SetStats(totals.getCount(), accuracy, trust);
 	}
 
 	private SetSummary summary(QuestionSet set, Long userId, String ownerNickname) {
 		return new SetSummary(set.getId(), set.getTitle(), set.getDescription(), set.getSubject().getName(),
 				ownerNickname, set.isOwner(userId) ? set.getQuestions().size() : set.visibleQuestions().size(),
 				set.getVisibility(), set.getStatus(), set.getSource(),
-				set.getShareCode(), set.isOwner(userId), set.getCreatedAt());
+				set.getShareCode(), set.isOwner(userId), set.getCreatedAt(), metrics.view(set));
 	}
 
 	private QuestionDto toDto(Question q, boolean withAnswer, QualityService.Stats stats) {

@@ -8,5 +8,5 @@ import qubrit_backend.quiz.domain.Visibility;
 
 public record SetSummary(Long id, String title, String description, String subject, String ownerNickname,
 		int questionCount, Visibility visibility, SetStatus status, SetSource source, String shareCode,
-		boolean mine, Instant createdAt) {
+		boolean mine, Instant createdAt, SetMetricsDto metrics) {
 }

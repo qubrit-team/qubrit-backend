@@ -21,10 +21,12 @@ public class AttemptService {
 	private final WrongNoteRepository wrongNoteRepository;
 	private final AnswerGrader grader;
 	private final QuestionRepository questionRepository;
+	private final SetMetricsService metrics;
 
 	public AttemptService(QuestionSetService setService, AttemptRepository attemptRepository,
 			AttemptAnswerRepository answerRepository, WrongNoteRepository wrongNoteRepository, AnswerGrader grader,
-			QuestionRepository questionRepository) {
+			QuestionRepository questionRepository, SetMetricsService metrics) {
+		this.metrics = metrics;
 		this.grader = grader;
 		this.questionRepository = questionRepository;
 		this.setService = setService;
@@ -80,6 +82,7 @@ public class AttemptService {
 			int score = (int) answerRepository.findByAttemptId(attemptId).stream()
 					.filter(AttemptAnswer::isCorrect).count();
 			attempt.finish(score);
+			metrics.refresh(attempt.getQuestionSet());
 		}
 		return toDto(attempt);
 	}
