@@ -240,18 +240,7 @@ public class QuestionSetService {
 		// 출제자는 전부, 풀이자는 품질 검증을 통과한(FAIL이 아닌) 문제만 본다
 		var shown = mine ? set.getQuestions() : set.visibleQuestions();
 		return new SetDetail(summary(set, userId, nickname),
-				shown.stream().map(q -> toDto(q, mine, stats.getOrDefault(q.getId(), QualityService.Stats.empty()))).toList(),
-				stats(set.getId(), stats));
-	}
-
-	// 풀이 수 / 평균 정답률(맞힌 문제 ÷ 출제된 문제) / 신뢰도(👍 ÷ 전체 평가). 근거가 없으면 null
-	private SetStats stats(Long setId, Map<Long, QualityService.Stats> questionStats) {
-		var totals = attemptRepository.totalsForSet(setId);
-		Integer accuracy = totals.getTotal() == 0 ? null : (int) Math.round(totals.getScore() * 100.0 / totals.getTotal());
-		int up = questionStats.values().stream().mapToInt(QualityService.Stats::up).sum();
-		int down = questionStats.values().stream().mapToInt(QualityService.Stats::down).sum();
-		Integer trust = up + down == 0 ? null : (int) Math.round(up * 100.0 / (up + down));
-		return new SetStats(totals.getCount(), accuracy, trust);
+				shown.stream().map(q -> toDto(q, mine, stats.getOrDefault(q.getId(), QualityService.Stats.empty()))).toList());
 	}
 
 	private SetSummary summary(QuestionSet set, Long userId, String ownerNickname) {

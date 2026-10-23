@@ -23,4 +23,19 @@ public interface AttemptRepository extends JpaRepository<Attempt, Long> {
 	@Modifying(flushAutomatically = true, clearAutomatically = true)
 	@Query("delete from Attempt t where t.questionSet.id = :setId")
 	void deleteBySetId(@Param("setId") Long setId);
+
+	/** 세트의 완료된 풀이 집계 (풀이 수, 맞힌 문제 합, 출제된 문제 합) */
+	interface SetTotals {
+		long getCount();
+
+		long getScore();
+
+		long getTotal();
+	}
+
+	@Query("""
+			select count(t) as count, coalesce(sum(t.score), 0) as score, coalesce(sum(t.total), 0) as total
+			from Attempt t
+			where t.questionSet.id = :setId and t.status = qubrit_backend.quiz.domain.AttemptStatus.DONE""")
+	SetTotals totalsForSet(@Param("setId") Long setId);
 }
