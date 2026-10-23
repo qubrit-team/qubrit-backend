@@ -8,3 +8,19 @@ spring.datasource.password=비번
 # JPA/Hibernate 설정
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
+
+# JWT 서명용 비밀키 (32자 이상 랜덤 문자열, 터미널에서 `openssl rand -base64 48`로 생성)
+jwt.secret=여기에-32자-이상-랜덤-문자열을-넣으세요-절대-커밋-금지
+
+# 토큰 유효시간(ms), 3600000 = 1시간
+jwt.expiration-ms=3600000
+
+# Gemini (키는 환경변수 GEMINI_API_KEY 또는 여기에 직접 입력, 커밋 금지)
+gemini.api-key=${GEMINI_API_KEY:}
+gemini.model=gemini-2.5-flash
+gemini.base-url=https://generativelanguage.googleapis.com
+
+# 학습 자료 파일 저장 위치와 업로드 크기 제한
+storage.dir=uploads
+spring.servlet.multipart.max-file-size=20MB
+spring.servlet.multipart.max-request-size=20MB

@@ -32,6 +32,12 @@ CREATE DATABASE qubrit_db;
 cp src/main/resources/application.properties.example src/main/resources/application.properties
 \`\`\`
 
+\`jwt.secret\`은 로그인 토큰 서명용 키입니다. 32자 이상 랜덤 문자열로 직접 생성해서 넣어주세요.
+
+\`\`\`bash
+openssl rand -base64 48
+\`\`\`
+
 > ⚠️ \`application.properties\`는 \`.gitignore\`에 등록되어 있어 Git에 올라가지 않습니다. 절대 직접 커밋하지 마세요.
 
 ### 4. 실행
