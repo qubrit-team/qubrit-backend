@@ -38,3 +38,4 @@ out/
 
 ### 정보 ###
 src/main/resources/application.properties
+.env
