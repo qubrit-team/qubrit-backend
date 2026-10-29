@@ -8,3 +8,34 @@ spring.datasource.password=비번
 # JPA/Hibernate 설정
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
+
+# JWT 서명용 비밀키 (32자 이상 랜덤 문자열, 터미널에서 `openssl rand -base64 48`로 생성)
+jwt.secret=여기에-32자-이상-랜덤-문자열을-넣으세요-절대-커밋-금지
+
+# 토큰 유효시간(ms), 3600000 = 1시간
+jwt.expiration-ms=3600000
+
+# Gemini (키는 환경변수 GEMINI_API_KEY 또는 여기에 직접 입력, 커밋 금지)
+gemini.api-key=${GEMINI_API_KEY:}
+gemini.model=gemini-2.5-flash
+gemini.base-url=https://generativelanguage.googleapis.com
+
+# 학습 자료 파일 저장 위치와 업로드 크기 제한
+storage.dir=uploads
+spring.servlet.multipart.max-file-size=20MB
+spring.servlet.multipart.max-request-size=20MB
+
+# 프로젝트 루트의 .env(KEY=VALUE, 커밋 금지)를 읽어 환경변수처럼 사용
+spring.config.import=optional:file:.env[.properties]
+
+# 이메일 인증코드 발송 SMTP (MAILER_* 는 .env 또는 환경변수로 주입)
+spring.mail.host=${MAILER_HOST:}
+spring.mail.port=${MAILER_PORT:465}
+spring.mail.username=${MAILER_USER:}
+spring.mail.password=${MAILER_PASS:}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.ssl.enable=true
+spring.mail.properties.mail.smtp.connectiontimeout=5000
+spring.mail.properties.mail.smtp.timeout=5000
+spring.mail.properties.mail.smtp.writetimeout=5000
+mailer.from=${MAILER_FROM:${MAILER_USER:}}

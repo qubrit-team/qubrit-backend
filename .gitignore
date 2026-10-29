@@ -38,3 +38,16 @@ out/
 
 ### 정보 ###
 src/main/resources/application.properties
+### Uploaded materials ###
+uploads/
+
+### 환경변수 / 키 파일 ###
+.env
+.env.*
+*.pem
+*.key
+
+### 로그 / OS ###
+*.log
+.DS_Store
+!.env.example
